@@ -1,0 +1,252 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+class Artwork {
+	string artist_name, title;
+	unsigned int year_made;
+
+public:
+
+	string Get_artist_name() {return artist_name;}
+	string Get_title() {return title;}
+	unsigned int Get_year_made() {return year_made;}
+
+	Artwork() : year_made(0) {
+	}
+	Artwork(string new_aName,
+			string new_ttl,
+			unsigned int new_yMade) {
+				artist_name = new_aName;
+				title = new_ttl;
+				year_made = new_yMade;
+	}
+
+	bool operator==(const Artwork& target)  {
+		bool are_equal = artist_name == target.artist_name;
+		are_equal = are_equal && title == target.title;
+		are_equal = are_equal && year_made == target.year_made;
+		return are_equal;
+	}
+};
+
+class Sold_Artwork : public Artwork {
+	string customer_name, customer_address;
+	double sale_amount;
+
+public:
+	string Get_customer_name() {return customer_name;}
+	string Get_customer_address() {return customer_address;}
+	double Get_sale_amount() {return sale_amount;}
+
+	Sold_Artwork() : sale_amount(0) {}
+	Sold_Artwork(string new_cName, string new_cAddress, double new_sAmount, Artwork new_artwork) :
+			// Implicit constructor
+			Artwork(new_artwork),
+			customer_name(new_cName),
+			customer_address(new_cAddress),
+			sale_amount(new_sAmount) {}
+
+	bool operator==(const Sold_Artwork& target)  {
+			bool are_equal = customer_name == target.customer_name;
+			are_equal = are_equal && customer_address == target.customer_address;
+			are_equal = are_equal && sale_amount == target.sale_amount;
+			return are_equal;
+		}
+};
+
+// No explicit constructors
+class Art_Collection {
+	vector<Artwork> my_artwork;
+	vector<Sold_Artwork> my_sold_Artwork;
+
+public:
+	vector<Artwork> Get_my_artwork() { return my_artwork;}
+	vector<Sold_Artwork> Get_my_sold_Artwork() {return my_sold_Artwork;}
+
+	// Inserts given artwork into the artwork vector
+	bool Insert_Artwork(const Artwork& artwork_info) {
+		for (int i = 0; i < my_artwork.size(); ++i) {
+			if (my_artwork[i] == artwork_info) {
+				return false;
+			}
+		}
+		my_artwork.push_back(artwork_info);
+		return true;
+	}
+
+	// Finds the corresponding Artwork instance,
+	// removes it from the artwork vector, and adds it to the matching vector
+	bool Sell_Artwork(const Sold_Artwork& artwork_info) {
+		// First cast Sold_Artwork object to Artwork object
+		Artwork Sold_artwork_info = static_cast<Artwork>(artwork_info);
+
+		// Remove from artwork vector ****** MAY NOT WORK
+		for (int i = 0; i < my_artwork.size(); ++i) {
+			if (my_artwork[i] == Sold_artwork_info) {
+				my_artwork.erase(my_artwork.begin() + i);
+
+				// Add to Sold_Artwork vector
+				my_sold_Artwork.push_back(artwork_info);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	bool is_Duplicate(const Artwork& artwork) {
+		int copy_count = 0;
+		for (int i = 0; i < my_artwork.size(); ++i) {
+			if(my_artwork[i] == artwork)
+				++copy_count;
+		}
+		return copy_count > 1;
+	}
+
+	friend Art_Collection operator+(Art_Collection& a_collection, Art_Collection& b_collection);
+
+	bool operator==(const Art_Collection& art_collection)  {
+	bool are_Equal = true;
+
+	for (int i = 0; i < art_collection.my_artwork.size(); ++i) {
+		are_Equal = my_artwork[i] == art_collection.my_artwork[i];
+
+	if (!are_Equal) {
+		break;
+	}
+
+	}
+
+	for (int j = 0; j < art_collection.my_sold_Artwork.size(); ++j) {
+	are_Equal = are_Equal && my_sold_Artwork[j] == art_collection.my_sold_Artwork[j];
+	}
+	return are_Equal;
+}
+
+	void Print(Art_Collection& a_work) {
+		for (int i = 0; i < a_work.Get_my_artwork().size(); ++i) {
+				cout << (a_work.my_artwork[i].Get_artist_name()) << endl;
+				cout << (a_work.my_artwork[i].Get_title()) << endl;
+				cout << (a_work.my_artwork[i].Get_year_made()) << endl;
+			}
+
+		for (int i = 0; i < a_work.Get_my_sold_Artwork().size(); ++i) {
+				cout << (a_work.my_sold_Artwork[i].Get_artist_name()) << endl;
+				cout << (a_work.my_sold_Artwork[i].Get_title()) << endl;
+				cout << (a_work.my_sold_Artwork[i].Get_year_made()) << endl;
+				cout << (a_work.my_sold_Artwork[i].Get_customer_name()) << endl;
+				cout << (a_work.my_sold_Artwork[i].Get_customer_address()) << endl;
+				cout << (a_work.my_sold_Artwork[i].Get_sale_amount()) << endl;
+			}
+	}
+
+};
+
+
+class testClass
+{
+
+public:
+
+};
+
+Art_Collection operator+(Art_Collection& a_collection, Art_Collection& b_collection) {
+	// Initialize new collection (c)
+	// Preserve sold + unsold
+	// Art_Collection object has: (vector<artwork>, vector<Sold_Artwork>)
+	Art_Collection c_collection = a_collection;
+	for (int i = 0; i < b_collection.my_artwork.size(); ++i) {
+		// Add every artwork object in collection b to collection c
+		c_collection.my_artwork.push_back(b_collection.my_artwork[i]);
+	}
+	for (int j = 0; j < b_collection.my_sold_Artwork.size(); ++j) {
+		// Add every sold artwork object in collection b to collection c
+		c_collection.my_sold_Artwork.push_back(b_collection.my_sold_Artwork[j]);
+	}
+
+	return c_collection;
+}
+
+
+int main() {
+
+Art_Collection louvre;
+Artwork a1("Coolio", "Red Velvet", 2019);
+Artwork a2("Suryadeep", "Dark Pitt", 2000);
+Artwork a3("Jen", "Ai Yeet", 2018);
+
+Art_Collection fake_louvre;
+Artwork a4("Michael", "Red Velvet", 2019);
+Artwork a5("Suryadeep", "Dark Pitt", 2000);
+Artwork a6("Jenpreet", "Ai Yeet", 2018);
+
+Art_Collection bougie_louvre;
+Artwork a7("Michaelpreet", "Red Velvet", 2019);
+Artwork a8("Suryadeep", "Dark Pitt", 2000);
+Artwork a9("Jen", "Ai Yeet", 2018);
+
+Artwork a10("Jen", "Ai Yeet", 2018);
+cout.put('\n');
+
+cout << "Tests for inserting artwork" << endl;
+cout << louvre.Insert_Artwork(a1) << endl; // 1
+cout << louvre.Insert_Artwork(a2) << endl; // 1
+cout << louvre.Insert_Artwork(a3) << endl; // 1
+cout.put('\n');
+
+cout << "Tests for inserting duplicates" << endl;
+cout << louvre.is_Duplicate(a2) << endl; // 0
+cout << louvre.Insert_Artwork(a2) << endl; // 0
+cout << louvre.is_Duplicate(a2) << endl; // 0
+cout.put('\n');
+
+cout << "Test for == operator for two artwork objects " << endl;
+cout << (a2 == a3) << endl; // 0
+cout << (a9 == a10) << endl; //1
+cout.put('\n');
+
+cout << "Set up for further testing" << endl;
+cout << fake_louvre.Insert_Artwork(a4) << endl; // 1
+cout << fake_louvre.Insert_Artwork(a5) << endl; // 1
+cout << fake_louvre.Insert_Artwork(a6) << endl; // 1
+
+cout << bougie_louvre.Insert_Artwork(a7) << endl; // 1
+cout << bougie_louvre.Insert_Artwork(a8) << endl; // 1
+cout << bougie_louvre.Insert_Artwork(a9) << endl;// 1
+cout.put('\n');
+
+cout << "Tests for sold art:" << endl;
+Sold_Artwork s1 = Sold_Artwork ("Kendraya", "40 SAJE" , 2, a4);
+Sold_Artwork s2 = Sold_Artwork ("maBra", "Trevord", 2300, a5);
+Sold_Artwork s3 = s2;
+
+louvre.Insert_Artwork(a4);
+louvre.Insert_Artwork(a5);
+
+cout << louvre.Sell_Artwork(s2) << endl; // 1
+cout << louvre.Sell_Artwork(s1) << endl; // 1
+cout << louvre.Sell_Artwork(s1) << endl; // 0
+cout.put('\n');
+cout << "Test for Sold_Artwork ==" << endl;
+
+cout << (s1 == s2) << endl; //0
+cout << (s2 == s3) << endl; //1
+cout.put('\n');
+
+cout << "Tests for Art_Collection ==" << endl;
+Art_Collection louvre_two = louvre;
+
+cout << (louvre == fake_louvre) << endl; // 0
+cout << (louvre == bougie_louvre) << endl; // 0
+cout << (louvre == louvre_two) << endl; // 1
+cout.put('\n');
+
+cout << "Tests for merging art collections" << endl;
+
+Art_Collection n_louvre = fake_louvre + louvre;
+n_louvre.Print(n_louvre);
+
+return 0;
+}
